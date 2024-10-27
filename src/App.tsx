@@ -144,6 +144,28 @@ export const App: React.FC = () => {
     setEditingTitle(todo.title);
   };
 
+  const handleBlur = (id: number) => {
+    const updatedTitle = editingTitle.trim();
+
+    if (!updatedTitle) {
+      setErrorMessage('Title cannot be empty');
+
+      return;
+    }
+
+    updateTodo({ id, title: updatedTitle })
+      .then(updatedTodo => {
+        setTodos(currentTodos =>
+          currentTodos.map(todo => (todo.id === id ? updatedTodo : todo)),
+        );
+        setEditingTodoId(null);
+        setEditingTitle('');
+      })
+      .catch(() => {
+        setErrorMessage('Unable to update title');
+      });
+  };
+
   return (
     <div className="todoapp">
       <h1 className="todoapp__title">todos</h1>
@@ -170,6 +192,8 @@ export const App: React.FC = () => {
           editingTodoId={editingTodoId}
           editingTitle={editingTitle}
           handleToggleTodo={handleToggleTodo}
+          setEditingTitle={setEditingTitle}
+          handleBlur={handleBlur}
         />
 
         {todos.length > 0 && (

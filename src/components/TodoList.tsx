@@ -13,8 +13,9 @@ interface TodoListProps {
   deletingTodoId: number | null;
   tempTodo: Todo | null;
   onDelete: (todoId: number) => void;
-  handleToggleTodo: (todoId: number) => void; // Исправлено
+  handleToggleTodo: (todoId: number) => void;
   onDoubleClickHandler: () => void;
+  handleBlur: () => void;
 }
 
 export const TodoList: React.FC<TodoListProps> = ({
@@ -26,6 +27,7 @@ export const TodoList: React.FC<TodoListProps> = ({
   onDelete,
   onDoubleClickHandler,
   handleToggleTodo,
+  handleBlur,
 }) => {
   const filteredTodos = useMemo(() => {
     return todos.filter(todo => {
@@ -53,6 +55,7 @@ export const TodoList: React.FC<TodoListProps> = ({
           tempTodo={tempTodo}
           onDoubleClickHandler={() => onDoubleClickHandler(todo)}
           handleToggleTodo={() => handleToggleTodo(todo)}
+          handleBlur={() => handleBlur(todo.id)}
         />
       ))}
 
