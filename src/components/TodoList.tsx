@@ -7,15 +7,20 @@ import { FilterOptions } from '../types/FilterOptions';
 
 interface TodoListProps {
   todos: Todo[];
-  todo: Todo;
   filter: FilterOptions;
   isSubmitting: boolean;
   deletingTodoId: number | null;
   tempTodo: Todo | null;
   onDelete: (todoId: number) => void;
   handleToggleTodo: (todoId: number) => void;
-  onDoubleClickHandler: () => void;
-  handleBlur: () => void;
+  onDoubleClickHandler: (todo: Todo) => void;
+  handleBlur: (todoId: number) => void;
+  editingTitle: string;
+  isEditing: boolean;
+  setEditingTitle: (title: string) => void;
+  handleUpdateTodo: () => void;
+  editingTodoId: number;
+  isTogglingAll: boolean;
 }
 
 export const TodoList: React.FC<TodoListProps> = ({
@@ -28,6 +33,12 @@ export const TodoList: React.FC<TodoListProps> = ({
   onDoubleClickHandler,
   handleToggleTodo,
   handleBlur,
+  editingTitle,
+  isEditing,
+  setEditingTitle,
+  handleUpdateTodo,
+  editingTodoId,
+  isTogglingAll,
 }) => {
   const filteredTodos = useMemo(() => {
     return todos.filter(todo => {
@@ -53,9 +64,15 @@ export const TodoList: React.FC<TodoListProps> = ({
           isSubmitting={isSubmitting}
           deletingTodoId={deletingTodoId}
           tempTodo={tempTodo}
-          onDoubleClickHandler={() => onDoubleClickHandler(todo)}
+          onDoubleClickHandler={onDoubleClickHandler}
           handleToggleTodo={() => handleToggleTodo(todo)}
           handleBlur={() => handleBlur(todo.id)}
+          editingTitle={editingTitle}
+          isEditing={isEditing}
+          setEditingTitle={setEditingTitle}
+          handleUpdateTodo={handleUpdateTodo}
+          editingTodoId={editingTodoId}
+          isTogglingAll={isTogglingAll}
         />
       ))}
 

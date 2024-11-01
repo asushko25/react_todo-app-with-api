@@ -17,7 +17,9 @@ export const App: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null);
-  const [editingTodoId, setEditingTodoId] = useState<Todo | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isTogglingAll, setIsTogglingAll] = useState(false);
+  const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
 
   useEffect(() => {
@@ -66,12 +68,16 @@ export const App: React.FC = () => {
   };
 
   const handleToggleAll = () => {
+    setIsTogglingAll(true);
+
     const haveActive = todos.some(todo => !todo.completed);
     const todosToUpdate = haveActive
       ? todos.filter(todo => !todo.completed)
       : todos;
 
-    todosToUpdate.forEach(todo => onUpdate(todo.id, { completed: haveActive }));
+    Promise.all(
+      todosToUpdate.map(todo => onUpdate(todo.id, { completed: haveActive })),
+    ).finally(() => setIsTogglingAll(false));
   };
 
   const handleToggleTodo = (todo: Todo) => {
@@ -142,6 +148,7 @@ export const App: React.FC = () => {
   const onDoubleClickHandler = (todo: Todo) => {
     setEditingTodoId(todo.id);
     setEditingTitle(todo.title);
+    setIsEditing(true);
   };
 
   const handleBlur = (id: number) => {
@@ -160,10 +167,40 @@ export const App: React.FC = () => {
         );
         setEditingTodoId(null);
         setEditingTitle('');
+        setIsEditing(false);
       })
       .catch(() => {
         setErrorMessage('Unable to update title');
       });
+  };
+
+  const handleUpdateTodo = (id: number, event: React.FormEvent) => {
+    event.preventDefault();
+
+    const updatedTitle = editingTitle.trim();
+
+    if (!updatedTitle) {
+      setErrorMessage('Title cannot be empty');
+
+      return;
+    }
+
+    const currentTodo = todos.find(todo => todo.id === id);
+
+    if (currentTodo && currentTodo.title !== updatedTitle) {
+      updateTodo({ id, title: updatedTitle })
+        .then(updatedTodo => {
+          setTodos(currentTodos =>
+            currentTodos.map(todo => (todo.id === id ? updatedTodo : todo)),
+          );
+          setEditingTodoId(null);
+          setEditingTitle('');
+          setIsEditing(false);
+        })
+        .catch(() => {
+          setErrorMessage('Unable to update todo');
+        });
+    }
   };
 
   return (
@@ -187,13 +224,16 @@ export const App: React.FC = () => {
           deletingTodoId={deletingTodoId}
           tempTodo={tempTodo}
           onDelete={handleDeleteTodo}
-          handleToggleTodo={handleToggleTodo}
           onDoubleClickHandler={onDoubleClickHandler}
           editingTodoId={editingTodoId}
           editingTitle={editingTitle}
           handleToggleTodo={handleToggleTodo}
-          setEditingTitle={setEditingTitle}
           handleBlur={handleBlur}
+          isEditing={isEditing}
+          setEditingTodoId={setEditingTodoId}
+          setEditingTitle={setEditingTitle}
+          handleUpdateTodo={handleUpdateTodo}
+          isTogglingAll={isTogglingAll}
         />
 
         {todos.length > 0 && (

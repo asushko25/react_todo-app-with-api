@@ -10,13 +10,15 @@ interface TodoItemProps {
   isSubmitting: boolean;
   deletingTodoId: number | null;
   tempTodo: Todo | null;
-  onDoubleClickHandler: () => void;
+  onDoubleClickHandler: (todo: Todo) => void;
   setEditingTitle: (title: string) => void;
-  editingTodoId: (todoId: number) => void;
+  editingTodoId: number | null;
+  isEditing: boolean;
   handleToggleTodo: (todoId: number) => void;
   editingTitle: string;
-  handleAddTodo: () => void;
+  handleUpdateTodo: () => void;
   handleBlur: () => void;
+  isTogglingAll: boolean;
 }
 
 export const TodoItem: React.FC<TodoItemProps> = ({
@@ -28,27 +30,30 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onDoubleClickHandler,
   setEditingTitle,
   editingTitle,
+  isEditing,
   editingTodoId,
   handleToggleTodo,
-  handleAddTodo,
+  handleUpdateTodo,
   handleBlur,
+  isTogglingAll,
 }) => {
   const { id, title, completed } = todo;
-
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (inputRef.current && editingTitle) {
+    if (inputRef.current && editingTodoId === id) {
       inputRef.current.focus();
     }
-  }, [editingTitle, editingTodoId]);
+  }, [editingTodoId, id]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      handleAddTodo();
+      handleUpdateTodo();
     } else if (event.key === 'Escape') {
-      setEditingTitle(todo.title);
-      editingTodoId(null);
+      setEditingTitle(title);
+      onDoubleClickHandler(null);
+
+      return;
     }
   };
 
@@ -60,12 +65,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           type="checkbox"
           className="todo__status"
           checked={completed}
-          onChange={() => handleToggleTodo(todo)}
+          onChange={() => handleToggleTodo(id)}
         />
       </label>
 
-      {editingTitle ? (
-        <form onSubmit={handleAddTodo}>
+      {isEditing && editingTodoId === todo.id ? (
+        <form onSubmit={event => handleUpdateTodo(todo.id, event)}>
           <input
             ref={inputRef}
             data-cy="TodoTitleField"
@@ -88,7 +93,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         </span>
       )}
 
-      {!editingTitle && (
+      {editingTodoId !== id && (
         <button
           type="button"
           className="todo__remove"
@@ -102,7 +107,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       <div
         data-cy="TodoLoader"
         className={classNames('modal overlay', {
-          'is-active': (isSubmitting && !tempTodo) || deletingTodoId === id,
+          'is-active':
+            (isSubmitting && !tempTodo) ||
+            deletingTodoId === id ||
+            isTogglingAll,
         })}
       >
         <div className="loader" />
