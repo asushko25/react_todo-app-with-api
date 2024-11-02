@@ -14,18 +14,21 @@ interface TodoItemProps {
   setEditingTitle: (title: string) => void;
   editingTodoId: number | null;
   isEditing: boolean;
-  handleToggleTodo: (todoId: number) => void;
+  handleToggleTodo: (todo: Todo) => void;
   editingTitle: string;
   handleUpdateTodo: () => void;
   handleBlur: () => void;
   isTogglingAll: boolean;
+  isDeleting: boolean;
+  isTogglingTodo: boolean;
+  loadingIds: number[];
+  setEditingTodoId: number;
 }
 
 export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
   onDelete,
   isSubmitting,
-  deletingTodoId,
   tempTodo,
   onDoubleClickHandler,
   setEditingTitle,
@@ -35,7 +38,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   handleToggleTodo,
   handleUpdateTodo,
   handleBlur,
-  isTogglingAll,
+  loadingIds,
+  setEditingTodoId,
 }) => {
   const { id, title, completed } = todo;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,9 +55,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       handleUpdateTodo();
     } else if (event.key === 'Escape') {
       setEditingTitle(title);
-      onDoubleClickHandler(null);
-
-      return;
+      setEditingTodoId(null);
+      setIsEditing(false);
+      inputRef.current?.blur();
     }
   };
 
@@ -108,9 +112,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         data-cy="TodoLoader"
         className={classNames('modal overlay', {
           'is-active':
-            (isSubmitting && !tempTodo) ||
-            deletingTodoId === id ||
-            isTogglingAll,
+            (isSubmitting && !tempTodo) || loadingIds.includes(todo.id),
         })}
       >
         <div className="loader" />

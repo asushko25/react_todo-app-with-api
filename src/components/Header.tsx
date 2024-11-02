@@ -1,5 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
+import { Todo } from '../types/Todo';
+import { todo } from 'node:test';
 
 type Props = {
   hasAllTodosCompleted: boolean;
@@ -9,6 +11,7 @@ type Props = {
   inputRef: React.RefObject<HTMLInputElement>;
   isSubmitting: boolean;
   handleToggleAll: () => void;
+  todos: Todo[];
 };
 
 export const Header: React.FC<Props> = ({
@@ -19,17 +22,21 @@ export const Header: React.FC<Props> = ({
   inputRef,
   isSubmitting,
   handleToggleAll,
+  todos,
 }) => {
   return (
     <header className="todoapp__header">
-      <button
-        type="button"
-        className={classNames('todoapp__toggle-all', {
-          active: hasAllTodosCompleted,
-        })}
-        data-cy="ToggleAllButton"
-        onClick={handleToggleAll}
-      />
+      {todos.length > 0 && (
+        <button
+          type="button"
+          className={classNames('todoapp__toggle-all', {
+            active: hasAllTodosCompleted,
+          })}
+          data-cy="ToggleAllButton"
+          onClick={handleToggleAll}
+        />
+      )}
+
       <form onSubmit={handleAddTodo}>
         <input
           data-cy="NewTodoField"

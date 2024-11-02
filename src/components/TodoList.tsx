@@ -12,15 +12,19 @@ interface TodoListProps {
   deletingTodoId: number | null;
   tempTodo: Todo | null;
   onDelete: (todoId: number) => void;
-  handleToggleTodo: (todoId: number) => void;
+  handleToggleTodo: (todo: Todo) => void;
   onDoubleClickHandler: (todo: Todo) => void;
   handleBlur: (todoId: number) => void;
   editingTitle: string;
   isEditing: boolean;
   setEditingTitle: (title: string) => void;
-  handleUpdateTodo: () => void;
-  editingTodoId: number;
+  handleUpdateTodo: (todoId: number, event: React.FormEvent) => void; // ожидаем, что handleUpdateTodo принимает id и event
+  editingTodoId: number | null;
   isTogglingAll: boolean;
+  isDeleting: boolean;
+  isTogglingTodo: boolean;
+  loadingIds: number[];
+  setEditingTodoId: (id: number | null) => void; // ожидаем функцию, которая обновляет editingTodoId
 }
 
 export const TodoList: React.FC<TodoListProps> = ({
@@ -38,7 +42,8 @@ export const TodoList: React.FC<TodoListProps> = ({
   setEditingTitle,
   handleUpdateTodo,
   editingTodoId,
-  isTogglingAll,
+  loadingIds,
+  setEditingTodoId,
 }) => {
   const filteredTodos = useMemo(() => {
     return todos.filter(todo => {
@@ -72,7 +77,8 @@ export const TodoList: React.FC<TodoListProps> = ({
           setEditingTitle={setEditingTitle}
           handleUpdateTodo={handleUpdateTodo}
           editingTodoId={editingTodoId}
-          isTogglingAll={isTogglingAll}
+          loadingIds={loadingIds}
+          setEditingTodoId={setEditingTodoId}
         />
       ))}
 

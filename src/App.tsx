@@ -21,6 +21,9 @@ export const App: React.FC = () => {
   const [isTogglingAll, setIsTogglingAll] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isTogglingTodo, setIsTogglingTodo] = useState(false);
+  const [loadingIds, setLoadingIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (inputRef.current && !isSubmitting) {
@@ -56,35 +59,47 @@ export const App: React.FC = () => {
   }
 
   const onUpdate = (id: number, updatedStatus: Partial<Todo>) => {
-    updateTodo({ id, ...updatedStatus })
+    return updateTodo({ id, ...updatedStatus })
       .then(updatedTodo => {
         setTodos(currentTodos =>
           currentTodos.map(todo => (todo.id === id ? updatedTodo : todo)),
         );
       })
       .catch(() => {
-        setErrorMessage('Unable to update todo');
+        setErrorMessage('Unable to update a todo');
       });
   };
 
   const handleToggleAll = () => {
-    setIsTogglingAll(true);
-
     const haveActive = todos.some(todo => !todo.completed);
     const todosToUpdate = haveActive
       ? todos.filter(todo => !todo.completed)
       : todos;
 
+    setLoadingIds([...loadingIds, ...todosToUpdate.map(todo => todo.id)]);
+
     Promise.all(
       todosToUpdate.map(todo => onUpdate(todo.id, { completed: haveActive })),
-    ).finally(() => setIsTogglingAll(false));
+    ).finally(() => {
+      setLoadingIds(prevLoadingIds =>
+        prevLoadingIds.filter(
+          id => !todosToUpdate.some(todo => todo.id === id),
+        ),
+      );
+    });
   };
 
   const handleToggleTodo = (todo: Todo) => {
-    onUpdate(todo.id, { completed: !todo.completed });
+    setLoadingIds([...loadingIds, todo.id]);
+
+    onUpdate(todo.id, { completed: !todo.completed }).finally(() => {
+      setLoadingIds(loadingIds.filter(id => id !== todo.id));
+    });
   };
 
   const handleDeleteTodo = (todoId: number) => {
+    setLoadingIds([...loadingIds, todoId]);
+
     deleteTodo(todoId)
       .then(() => {
         setTodos(currentTodos =>
@@ -96,6 +111,7 @@ export const App: React.FC = () => {
       })
       .finally(() => {
         setDeletingTodoId(null);
+        setLoadingIds(loadingIds.filter(id => todoId !== id));
       });
   };
 
@@ -188,6 +204,8 @@ export const App: React.FC = () => {
     const currentTodo = todos.find(todo => todo.id === id);
 
     if (currentTodo && currentTodo.title !== updatedTitle) {
+      setLoadingIds(prevLoadingIds => [...prevLoadingIds, id]);
+
       updateTodo({ id, title: updatedTitle })
         .then(updatedTodo => {
           setTodos(currentTodos =>
@@ -198,7 +216,12 @@ export const App: React.FC = () => {
           setIsEditing(false);
         })
         .catch(() => {
-          setErrorMessage('Unable to update todo');
+          setErrorMessage('Unable to update a todo');
+        })
+        .finally(() => {
+          setLoadingIds(prevLoadingIds =>
+            prevLoadingIds.filter(loadingId => loadingId !== id),
+          );
         });
     }
   };
@@ -215,6 +238,7 @@ export const App: React.FC = () => {
           inputRef={inputRef}
           isSubmitting={isSubmitting}
           handleToggleAll={handleToggleAll}
+          todos={todos}
         />
 
         <TodoList
@@ -234,6 +258,10 @@ export const App: React.FC = () => {
           setEditingTitle={setEditingTitle}
           handleUpdateTodo={handleUpdateTodo}
           isTogglingAll={isTogglingAll}
+          setIsDeleting={setIsDeleting}
+          isDeleting={isDeleting}
+          isTogglingTodo={isTogglingTodo}
+          loadingIds={loadingIds}
         />
 
         {todos.length > 0 && (
