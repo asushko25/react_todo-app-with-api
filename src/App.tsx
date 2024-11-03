@@ -18,11 +18,9 @@ export const App: React.FC = () => {
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isTogglingAll, setIsTogglingAll] = useState(false);
   const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isTogglingTodo, setIsTogglingTodo] = useState(false);
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
 
   useEffect(() => {
@@ -171,7 +169,16 @@ export const App: React.FC = () => {
     const updatedTitle = editingTitle.trim();
 
     if (!updatedTitle) {
-      setErrorMessage('Title cannot be empty');
+      deleteTodo(id)
+        .then(() => {
+          setTodos(currentTodos => currentTodos.filter(todo => todo.id !== id));
+          setEditingTodoId(null);
+          setEditingTitle('');
+          setIsEditing(false);
+        })
+        .catch(() => {
+          setErrorMessage('Unable to delete a todo');
+        });
 
       return;
     }
@@ -195,35 +202,53 @@ export const App: React.FC = () => {
 
     const updatedTitle = editingTitle.trim();
 
-    if (!updatedTitle) {
-      setErrorMessage('Title cannot be empty');
+    if (todos.find(todo => todo.id === id)?.title === updatedTitle) {
+      setEditingTodoId(null);
+      setIsEditing(false);
+      setEditingTitle('');
 
       return;
     }
 
-    const currentTodo = todos.find(todo => todo.id === id);
+    if (!updatedTitle) {
+      setIsSubmitting(true);
 
-    if (currentTodo && currentTodo.title !== updatedTitle) {
-      setLoadingIds(prevLoadingIds => [...prevLoadingIds, id]);
-
-      updateTodo({ id, title: updatedTitle })
-        .then(updatedTodo => {
-          setTodos(currentTodos =>
-            currentTodos.map(todo => (todo.id === id ? updatedTodo : todo)),
-          );
-          setEditingTodoId(null);
-          setEditingTitle('');
-          setIsEditing(false);
+      deleteTodo(id)
+        .then(() => {
+          setTodos(currentTodos => currentTodos.filter(todo => todo.id !== id));
         })
         .catch(() => {
-          setErrorMessage('Unable to update a todo');
+          setErrorMessage('Unable to delete a todo');
         })
         .finally(() => {
-          setLoadingIds(prevLoadingIds =>
-            prevLoadingIds.filter(loadingId => loadingId !== id),
-          );
+          setEditingTodoId(null);
+          setIsEditing(false);
+          setEditingTitle('');
+          setIsSubmitting(false);
         });
+
+      return;
     }
+
+    setLoadingIds(prevLoadingIds => [...prevLoadingIds, id]);
+
+    updateTodo({ id, title: updatedTitle })
+      .then(updatedTodo => {
+        setTodos(currentTodos =>
+          currentTodos.map(todo => (todo.id === id ? updatedTodo : todo)),
+        );
+        setEditingTodoId(null);
+        setEditingTitle('');
+        setIsEditing(false);
+      })
+      .catch(() => {
+        setErrorMessage('Unable to update a todo');
+      })
+      .finally(() => {
+        setLoadingIds(prevLoadingIds =>
+          prevLoadingIds.filter(loadingId => loadingId !== id),
+        );
+      });
   };
 
   return (

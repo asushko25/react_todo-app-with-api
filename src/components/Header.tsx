@@ -1,7 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Todo } from '../types/Todo';
-import { todo } from 'node:test';
 
 type Props = {
   hasAllTodosCompleted: boolean;

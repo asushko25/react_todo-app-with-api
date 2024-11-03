@@ -52,11 +52,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      handleUpdateTodo();
+      handleUpdateTodo(todo.id, event);
     } else if (event.key === 'Escape') {
       setEditingTitle(title);
       setEditingTodoId(null);
-      setIsEditing(false);
       inputRef.current?.blur();
     }
   };
