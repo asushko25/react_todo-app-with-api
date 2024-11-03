@@ -282,10 +282,8 @@ export const App: React.FC = () => {
           setEditingTodoId={setEditingTodoId}
           setEditingTitle={setEditingTitle}
           handleUpdateTodo={handleUpdateTodo}
-          isTogglingAll={isTogglingAll}
           setIsDeleting={setIsDeleting}
           isDeleting={isDeleting}
-          isTogglingTodo={isTogglingTodo}
           loadingIds={loadingIds}
         />
 

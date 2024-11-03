@@ -20,7 +20,6 @@ interface TodoListProps {
   setEditingTitle: (title: string) => void;
   handleUpdateTodo: (todoId: number, event: React.FormEvent) => void; // ожидаем, что handleUpdateTodo принимает id и event
   editingTodoId: number | null;
-  isTogglingAll: boolean;
   isDeleting: boolean;
   isTogglingTodo: boolean;
   loadingIds: number[];
